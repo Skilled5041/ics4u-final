@@ -10,7 +10,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Chart {
     // Only 4 key charts are supported for now
@@ -24,7 +25,7 @@ public class Chart {
         return audio;
     }
 
-    private final int songPreviewTime;
+    private int songPreviewTime = 0;
 
     public int getSongPreviewTime() {
         return songPreviewTime;
@@ -36,81 +37,81 @@ public class Chart {
         return background;
     }
 
-    private final String mapId;
+    private String mapId = null;
 
     public String getMapId() {
         return mapId;
     }
 
-    private final String mapSetId;
+    private String mapSetId = null;
 
     public String getMapSetId() {
         return mapSetId;
     }
 
-    private final Mode mode;
+    private Mode mode = null;
 
     public Mode getMode() {
         return mode;
     }
 
-    private final String songTitle;
+    private String songTitle = null;
 
     public String getSongTitle() {
         return songTitle;
     }
 
-    public final String songArtist;
+    public String songArtist = null;
 
     public String getSongArtist() {
         return songArtist;
     }
 
-    private final String source;
+    private String source = null;
 
     public String getSource() {
         return source;
     }
 
-    private final String tags;
+    private String tags = null;
 
     public String getTags() {
         return tags;
     }
 
-    private final String creator;
+    private String creator = null;
 
     public String getCreator() {
         return creator;
     }
 
-    private final String difficultyName;
+    private String difficultyName = null;
 
     public String getDifficultyName() {
         return difficultyName;
     }
 
-    private final String description;
+    private String description = null;
 
     public String getDescription() {
         return description;
     }
 
-    private final ArrayDeque<TimingPoint> timingPoints;
+    private ArrayList<TimingPoint> timingPoints = null;
 
-    public ArrayDeque<TimingPoint> getTimingPoints() {
+    public ArrayList<TimingPoint> getTimingPoints() {
         return timingPoints;
     }
 
-    private final ArrayDeque<SliderVelocity> sliderVelocities;
+    private ArrayList<SliderVelocity> sliderVelocities = null;
 
-    public ArrayDeque<SliderVelocity> getSliderVelocities() {
+    public ArrayList<SliderVelocity> getSliderVelocities() {
         return sliderVelocities;
     }
 
-    private final ArrayDeque<Note> notes;
+    private ArrayList<Note> notes = null;
 
-    public ArrayDeque<Note> getNotes() {
+    public ArrayList<Note> getNotes() {
         return notes;
     }
 
@@ -134,10 +135,32 @@ public class Chart {
             String creator,
             String difficultyName,
             String description,
-            ArrayDeque<TimingPoint> timingPoints,
-            ArrayDeque<SliderVelocity> sliderVelocities,
-            ArrayDeque<Note> notes
+            ArrayList<TimingPoint> timingPoints,
+            ArrayList<SliderVelocity> sliderVelocities,
+            ArrayList<Note> notes
     ) {
+        // Make sure nothing is null
+        if (
+                audioFilePath == null ||
+                        backgroundFilePath == null ||
+                        mapId == null ||
+                        mapSetId == null ||
+                        mode == null ||
+                        songTitle == null ||
+                        songArtist == null ||
+                        source == null ||
+                        tags == null ||
+                        creator == null ||
+                        difficultyName == null ||
+                        description == null ||
+                        timingPoints == null ||
+                        sliderVelocities == null ||
+                        notes == null
+        ) {
+            this.hasError = true;
+            return;
+        }
+
         try {
             // TODO: must convert mp3 to wav, maybe implement auto conversion
             if (audioFilePath.endsWith(".mp3")) {
@@ -186,7 +209,7 @@ public class Chart {
             return null;
         }
         try {
-            String audioFilePath = directoryPath + parseStringLine( br.readLine());
+            String audioFilePath = directoryPath + parseStringLine(br.readLine());
             int songPreviewTime = parseIntLine(br.readLine());
             String backgroundFilePath = directoryPath + parseStringLine(br.readLine());
             String mapId = parseStringLine(br.readLine());
@@ -213,7 +236,7 @@ public class Chart {
             // Skip sound effect line
             br.readLine();
 
-            ArrayDeque<TimingPoint> timingPoints = new ArrayDeque<>();
+            ArrayList<TimingPoint> timingPoints = new ArrayList<>();
             br.readLine();
             while (true) {
                 String startTime = br.readLine();
@@ -225,7 +248,7 @@ public class Chart {
                 timingPoints.add(new TimingPoint(startTimeInt, bpm));
             }
 
-            ArrayDeque<SliderVelocity> sliderVelocities = new ArrayDeque<>();
+            ArrayList<SliderVelocity> sliderVelocities = new ArrayList<>();
             while (true) {
                 String startTime = br.readLine();
                 if (startTime.startsWith("HitObjects")) {
@@ -236,7 +259,7 @@ public class Chart {
                 sliderVelocities.add(new SliderVelocity(startTimeDouble, multiplier));
             }
 
-            ArrayDeque<Note> notes = new ArrayDeque<>();
+            ArrayList<Note> notes = new ArrayList<>();
             String line = br.readLine();
             while (line != null) {
                 int startTime = parseIntLine(line);
