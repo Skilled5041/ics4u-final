@@ -1,5 +1,6 @@
 package aaron.screens;
 
+import aaron.Game;
 import aaron.charts.Chart;
 import aaron.charts.Note;
 import aaron.graphics.Screen;
@@ -25,10 +26,11 @@ public class Game4Key implements Screen {
 
     @Override
     public void start() throws LineUnavailableException, IOException {
-        chart = Chart.parse("charts/3", "23102.qua");
+        chart = Chart.parse("charts/1", "12288.qua");
+        assert chart != null;
         song = chart.getAudio();
 
-        Timer startTimer = new Timer(5000, e -> {
+        Timer startTimer = new Timer(1500, e -> {
             song.start();
         });
         startTimer.setRepeats(false);
@@ -42,10 +44,10 @@ public class Game4Key implements Screen {
 
     private Chart chart;
     private Clip song;
-    private final int scrollSpeed = 15;
+    private final int scrollSpeed = 5;
     private int minIndex = 0;
-    private boolean[] laneHeld = new boolean[4];
-    private BufferedImage hitGradient = ImageIO.read(new File("resources/skin/hit_gradient.png"));
+    private final boolean[] laneHeld = new boolean[4];
+    private final BufferedImage hitGradient = ImageIO.read(new File("resources/skin/hit_gradient.png"));
     private double accuracy = 1;
     private int accuracySampleCount = 0;
 
@@ -53,10 +55,12 @@ public class Game4Key implements Screen {
     public void render(Graphics2D g2d) {
         // Main play area
         g2d.setStroke(new BasicStroke(2));
-        aaron.graphics.Utils.drawCenteredRectangle(g2d, 960, 540, 600, 1082);
+        aaron.graphics.Utils.drawCenteredRectangle(g2d, 960, 540, 600, 1084);
+
+        // Note receptor
         g2d.setColor(new Color(249, 180, 222, 255));
         g2d.setStroke(new BasicStroke(4));
-        g2d.drawLine(960 - 300, 1080 - 100, 960 + 300, 1080 - 100);
+        g2d.drawLine(960 - 300 + 2, 1080 - 100, 960 + 300 - 2, 1080 - 100);
 
         // Draw the columns
         // TODO: maybe have setting for this
@@ -64,10 +68,11 @@ public class Game4Key implements Screen {
 //        g2d.drawLine(960 - 1, 0, 960 - 1, 1080);
 //        g2d.drawLine(960 - 150 - 1, 0, 960 - 150 - 1, 1080);
 //        g2d.drawLine(960 + 150 - 1, 0, 960 + 150 - 1, 1080);
-
+        // TODO: note appearing notes are long notes (i think)
         long currentSongTime = (long) (song.getLongFramePosition() * 1000 / song.getFormat().getFrameRate());
         for (int i = minIndex; i < chart.getNotes().size(); i++) {
             Note note = chart.getNotes().get(i);
+            // TODO: check if this is correct
             if (note.startTime() + aaron.rhythm.Utils.getMaxOkayTime() < currentSongTime) {
                 minIndex = i + 1;
                 accuracySampleCount++;
@@ -98,6 +103,7 @@ public class Game4Key implements Screen {
             g2d.setColor(new Color(80, 195, 247, 255));
         }
 
+        // TODO: make the y value more accurate
         g2d.fillRect(960 - 450 + (lane * 150), convertNoteTimeToY(time, currentSongTime, scrollSpeed) - 50, 150, 50);
     }
 
@@ -119,7 +125,6 @@ public class Game4Key implements Screen {
     }};
 
     @Override
-
     public void keyTyped(KeyEvent e) {
 
     }
@@ -137,6 +142,8 @@ public class Game4Key implements Screen {
             }
 
             // Normal note
+            // TODO: make sure the correct lane is hit
+            // TODO: maybe separate the lanes into different lists
             minIndex++;
             accuracySampleCount++;
             if (nextNote.endTime() == -1) {

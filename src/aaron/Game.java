@@ -26,9 +26,8 @@ public class Game extends JPanel implements KeyListener {
         setBackground(Color.BLACK);
         addKeyListener(this);
         setFocusable(true);
-        int fpsCap = 120;
+        int fpsCap = 300;
         Timer frameRenderer = new Timer((int) Math.ceil(1000.0 / fpsCap),  e -> {
-            toolkit.sync();
             repaint();
         });
         frameRenderer.start();

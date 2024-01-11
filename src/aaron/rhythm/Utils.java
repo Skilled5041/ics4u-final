@@ -44,22 +44,22 @@ public class Utils {
     }
 
     public static double getPerfectAccuracy() {
-        return 0.975;
+        return 0.9825;
     }
 
     public static double getGreatAccuracy() {
-        return 0.8;
+        return 0.65;
     }
 
     public static double getGoodAccuracy() {
-        return 0.6;
-    }
-
-    public static double getOkayAccuracy() {
         return 0.25;
     }
 
+    public static double getOkayAccuracy() {
+        return -1;
+    }
+
     public static double getMissAccuracy() {
-        return 0;
+        return -0.5;
     }
 }

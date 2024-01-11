@@ -15,6 +15,7 @@ public class Main {
         frame.add(game);
         frame.setSize(Game.WIDTH, Game.HEIGHT);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setUndecorated(true);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
