@@ -1,5 +1,5 @@
 package aaron.charts;
 
-public record TimingPoint(int startTime, double bpm) {
+public record TimingPoint(double startTime, double bpm) {
 
 }

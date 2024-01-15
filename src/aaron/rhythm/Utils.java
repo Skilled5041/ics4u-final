@@ -55,6 +55,7 @@ public class Utils {
         return 0.25;
     }
 
+    // On the screen website where I got this accuracy system from, "okays" are worse than misses
     public static double getOkayAccuracy() {
         return -1;
     }

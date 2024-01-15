@@ -1,7 +1,5 @@
 package aaron;
 
-import aaron.Game;
-
 import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JFrame;
 import java.awt.event.WindowAdapter;

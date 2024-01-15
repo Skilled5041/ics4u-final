@@ -3,7 +3,6 @@ package aaron.graphics;
 import javax.sound.sampled.LineUnavailableException;
 import java.awt.Graphics2D;
 import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public interface Screen extends KeyListener {

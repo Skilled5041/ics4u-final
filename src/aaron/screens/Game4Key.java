@@ -1,6 +1,5 @@
 package aaron.screens;
 
-import aaron.Game;
 import aaron.charts.Chart;
 import aaron.charts.Note;
 import aaron.graphics.Screen;
@@ -17,6 +16,7 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,13 +24,20 @@ public class Game4Key implements Screen {
     public Game4Key() throws IOException {
     }
 
+    private final ArrayList<Note>[] currentGameNotes = (ArrayList<Note>[]) new ArrayList[4];
+
     @Override
     public void start() throws LineUnavailableException, IOException {
-        chart = Chart.parse("charts/1", "12288.qua");
+        chart = Chart.parse("charts/2", "18167.qua");
         assert chart != null;
         song = chart.getAudio();
 
-        Timer startTimer = new Timer(1500, e -> {
+        // Clone the notes
+        for (int i = 0; i < 4; i++) {
+            currentGameNotes[i] = new ArrayList<>(chart.getNotes()[i]);
+        }
+
+        Timer startTimer = new Timer(2000, e -> {
             song.start();
         });
         startTimer.setRepeats(false);
@@ -44,12 +51,19 @@ public class Game4Key implements Screen {
 
     private Chart chart;
     private Clip song;
-    private final int scrollSpeed = 5;
-    private int minIndex = 0;
+    private final int scrollSpeed = 10;
+    private int[] minIndex = new int[4];
     private final boolean[] laneHeld = new boolean[4];
     private final BufferedImage hitGradient = ImageIO.read(new File("resources/skin/hit_gradient.png"));
     private double accuracy = 1;
     private int accuracySampleCount = 0;
+
+    private int missCount = 0;
+    private int okayCount = 0;
+    private int goodCount = 0;
+    private int greatCount = 0;
+    private int perfectCount = 0;
+    private int marvelousCount = 0;
 
     @Override
     public void render(Graphics2D g2d) {
@@ -68,21 +82,48 @@ public class Game4Key implements Screen {
 //        g2d.drawLine(960 - 1, 0, 960 - 1, 1080);
 //        g2d.drawLine(960 - 150 - 1, 0, 960 - 150 - 1, 1080);
 //        g2d.drawLine(960 + 150 - 1, 0, 960 + 150 - 1, 1080);
-        // TODO: note appearing notes are long notes (i think)
         long currentSongTime = (long) (song.getLongFramePosition() * 1000 / song.getFormat().getFrameRate());
-        for (int i = minIndex; i < chart.getNotes().size(); i++) {
-            Note note = chart.getNotes().get(i);
-            // TODO: check if this is correct
-            if (note.startTime() + aaron.rhythm.Utils.getMaxOkayTime() < currentSongTime) {
-                minIndex = i + 1;
-                accuracySampleCount++;
-                accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMissAccuracy(), accuracySampleCount);
-                continue;
+        for (int i = 0; i < currentGameNotes.length; i++) {
+            ArrayList<Note> notesList = currentGameNotes[i];
+            for (int j = minIndex[i]; j < notesList.size(); j++) {
+                Note note = notesList.get(j);
+
+                // If a normal note has gone offscreen, and it has not been hit, count it as a miss
+                if (note.getStartTime() + aaron.rhythm.Utils.getMaxOkayTime() < currentSongTime && note.getEndTime() == -1 && !note.isHit()) {
+                    minIndex[i] = j + 1;
+                    accuracySampleCount++;
+                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMissAccuracy(), accuracySampleCount);
+                    missCount++;
+                    note.setHit(true);
+                    continue;
+                // If the end of a long note has gone offscreen, and it has not been released TODO: implement
+                } else if (note.getEndTime() != -1 && note.getEndTime() + aaron.rhythm.Utils.getMaxOkayTime() < currentSongTime) {
+                    minIndex[i] = j + 1;
+//                    accuracySampleCount++;
+//                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMissAccuracy(), accuracySampleCount);
+                    continue;
+                }
+//                System.out.println(missCount);
+                // If the start of a long note has gone offscreen,
+                // and it has not been hit, count it as a miss
+                if (note.getEndTime() != -1 && note.getStartTime() + aaron.rhythm.Utils.getMaxOkayTime() < currentSongTime && !note.isHit()) {
+                    accuracySampleCount++;
+                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMissAccuracy(), accuracySampleCount);
+                    missCount++;
+                    note.setHit(true);
+                }
+                // Break if notes are offscreen (they have not appeared yet)
+                if (note.getStartTime() > currentSongTime + aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed)) {
+                    break;
+                }
+
+                // Normal note
+                if (note.getEndTime() == -1) {
+                    drawNote(g2d, note.getLane(), note.getStartTime(), currentSongTime);
+                } else {
+                    drawLongNote(g2d, note.getLane(), note.getStartTime(), note.getEndTime(), currentSongTime);
+                }
             }
-            if (note.endTime() > currentSongTime + aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed)) {
-                break;
-            }
-            drawNote(g2d, note.Lane(), note.startTime(), currentSongTime);
         }
 
         for (int i = 0; i < 4; i++) {
@@ -107,14 +148,37 @@ public class Game4Key implements Screen {
         g2d.fillRect(960 - 450 + (lane * 150), convertNoteTimeToY(time, currentSongTime, scrollSpeed) - 50, 150, 50);
     }
 
+    public void drawLongNote(Graphics2D g2d, int lane, int startTime, int endTime, long currentSongTime) {
+        g2d.setStroke(new BasicStroke(1));
+        if (lane == 1 || lane == 4) {
+            g2d.setColor(new Color(253, 253, 253, 255));
+        } else {
+            g2d.setColor(new Color(80, 195, 247, 255));
+        }
+
+        // TODO: make the y value more accurate
+        g2d.fillRect(960 - 450 + (lane * 150),
+                getLongNoteEndY(endTime, currentSongTime, scrollSpeed),
+                150,
+                getLongNoteHeight(startTime, endTime, scrollSpeed));
+    }
+
     private static int convertNoteTimeToY(int time, long currentSongTime, int scrollSpeed) {
         int scrollSpeedTimeWidth = aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed);
         double decimal = (double) (time - currentSongTime) / scrollSpeedTimeWidth;
         return (int) (1080 - decimal * 1080);
     }
 
-    public void drawLongNote(int lane) {
+    private static int getLongNoteEndY(int endTime, long currentSongTime, int scrollSpeed) {
+        int scrollSpeedTimeWidth = aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed);
+        double decimal = (double) (endTime - currentSongTime) / scrollSpeedTimeWidth;
+        return (int) (1080 - decimal * 1080);
+    }
 
+    private static int getLongNoteHeight(int startTime, int endTime, int scrollSpeed) {
+        int scrollSpeedTimeWidth = aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed);
+        double decimal = (double) (endTime - startTime) / scrollSpeedTimeWidth;
+        return (int) (decimal * 1080);
     }
 
     Map<Integer, Integer> keycodeToLane = new HashMap<>() {{
@@ -132,35 +196,49 @@ public class Game4Key implements Screen {
     @Override
     public void keyPressed(KeyEvent e) {
         int lane = keycodeToLane.getOrDefault(e.getKeyCode(), -1);
+
         if (lane >= 1 && lane <= 4) {
+            // Return if already held
+            if (laneHeld[lane - 1]) {
+                return;
+
+            }
+
             laneHeld[lane - 1] = true;
 
-            Note nextNote = chart.getNotes().get(minIndex);
+            Note nextNote = currentGameNotes[lane - 1].get(minIndex[lane - 1]);
             // Ignore note since too far away
-            if (Math.abs(nextNote.startTime() - aaron.rhythm.Utils.getCurrentSongTime(song)) > 164) {
+            int timingInaccuracy = (int) Math.abs(nextNote.getStartTime() - Utils.getCurrentSongTime(song));
+            if (timingInaccuracy > 164) {
                 return;
             }
 
-            // Normal note
-            // TODO: make sure the correct lane is hit
-            // TODO: maybe separate the lanes into different lists
-            minIndex++;
             accuracySampleCount++;
-            if (nextNote.endTime() == -1) {
-                if (Math.abs(nextNote.startTime() - aaron.rhythm.Utils.getCurrentSongTime(song)) > aaron.rhythm.Utils.getMaxOkayTime()) {
-                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMissAccuracy(), accuracySampleCount);
-                } else if (Math.abs(nextNote.startTime() - aaron.rhythm.Utils.getCurrentSongTime(song)) > aaron.rhythm.Utils.getMaxGoodTime()) {
-                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getOkayAccuracy(), accuracySampleCount);
-                } else if (Math.abs(nextNote.startTime() - aaron.rhythm.Utils.getCurrentSongTime(song)) > aaron.rhythm.Utils.getMaxGreatTime()) {
-                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getGoodAccuracy(), accuracySampleCount);
-                } else if (Math.abs(nextNote.startTime() - aaron.rhythm.Utils.getCurrentSongTime(song)) > aaron.rhythm.Utils.getMaxPerfectTime()) {
-                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getGreatAccuracy(), accuracySampleCount);
-                } else if (Math.abs(nextNote.startTime() - aaron.rhythm.Utils.getCurrentSongTime(song)) > aaron.rhythm.Utils.getMaxMarvelousTime()) {
-                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getPerfectAccuracy(), accuracySampleCount);
-                } else {
-                    accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMarvelousAccuracy(), accuracySampleCount);
-                }
+
+            // Normal note
+            if (nextNote.getEndTime() == -1) {
+                // Long notes should not disappear when first hit
+                minIndex[lane - 1]++;
             }
+
+            if (timingInaccuracy > aaron.rhythm.Utils.getMaxGoodTime()) {
+                accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getOkayAccuracy(), accuracySampleCount);
+                okayCount++;
+            } else if (timingInaccuracy > aaron.rhythm.Utils.getMaxGreatTime()) {
+                accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getGoodAccuracy(), accuracySampleCount);
+                goodCount++;
+            } else if (timingInaccuracy > aaron.rhythm.Utils.getMaxPerfectTime()) {
+                accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getGreatAccuracy(), accuracySampleCount);
+                greatCount++;
+            } else if (timingInaccuracy > aaron.rhythm.Utils.getMaxMarvelousTime()) {
+                accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getPerfectAccuracy(), accuracySampleCount);
+                perfectCount++;
+            } else {
+                accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMarvelousAccuracy(), accuracySampleCount);
+                marvelousCount++;
+            }
+
+            nextNote.setHit(true);
         }
     }
 

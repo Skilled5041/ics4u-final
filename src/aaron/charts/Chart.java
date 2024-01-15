@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Chart {
     // Only 4 key aaron.charts are supported for now
@@ -24,9 +25,9 @@ public class Chart {
         return audio;
     }
 
-    private int songPreviewTime = 0;
+    private double songPreviewTime = 0;
 
-    public int getSongPreviewTime() {
+    public double getSongPreviewTime() {
         return songPreviewTime;
     }
 
@@ -108,9 +109,9 @@ public class Chart {
         return sliderVelocities;
     }
 
-    private ArrayList<Note> notes = null;
+    private ArrayList<Note>[] notes = null;
 
-    public ArrayList<Note> getNotes() {
+    public ArrayList<Note>[] getNotes() {
         return notes;
     }
 
@@ -122,7 +123,7 @@ public class Chart {
 
     public Chart(
             String audioFilePath,
-            int songPreviewTime,
+            double songPreviewTime,
             String backgroundFilePath,
             String mapId,
             String mapSetId,
@@ -136,7 +137,7 @@ public class Chart {
             String description,
             ArrayList<TimingPoint> timingPoints,
             ArrayList<SliderVelocity> sliderVelocities,
-            ArrayList<Note> notes
+            ArrayList<Note>[] notes
     ) {
         // Make sure nothing is null
         if (
@@ -161,7 +162,6 @@ public class Chart {
         }
 
         try {
-            // TODO: must convert mp3 to wav, maybe implement auto conversion
             if (audioFilePath.endsWith(".mp3")) {
                 audioFilePath = audioFilePath.substring(0, audioFilePath.length() - 4) + ".wav";
             }
@@ -209,9 +209,10 @@ public class Chart {
         }
         try {
             String audioFilePath = directoryPath + parseStringLine(br.readLine());
-            int songPreviewTime = 0;
+
+            double songPreviewTime = 0;
             try {
-                songPreviewTime = parseIntLine(br.readLine());
+                songPreviewTime = parseDoubleLine(br.readLine());
             } catch (NumberFormatException ignored) {
                 // TODO: maybe improve this
                 // Some songs do not have this
@@ -244,12 +245,11 @@ public class Chart {
             ArrayList<TimingPoint> timingPoints = new ArrayList<>();
             br.readLine();
             while (true) {
-                String startTime = br.readLine();
+                  String startTime = br.readLine();
                 if (startTime.startsWith("SliderVelocities")) {
                     break;
                 }
-                int startTimeInt =
-                        parseIntLine(startTime);
+                double startTimeInt = parseDoubleLine(startTime);
                 double bpm = Double.parseDouble(parseStringLine(br.readLine()));
                 timingPoints.add(new TimingPoint(startTimeInt, bpm));
             }
@@ -265,7 +265,10 @@ public class Chart {
                 sliderVelocities.add(new SliderVelocity(startTimeDouble, multiplier));
             }
 
-            ArrayList<Note> notes = new ArrayList<>();
+            ArrayList<Note>[] notes = (ArrayList<Note>[]) new ArrayList[4];
+            for (int i = 0; i < 4; i++) {
+                notes[i] = new ArrayList<>();
+            }
             String line = br.readLine();
             while (line != null) {
                 int startTime = parseIntLine(line);
@@ -273,11 +276,11 @@ public class Chart {
                 String maybeEndTime = br.readLine().trim();
                 if (maybeEndTime.startsWith("EndTime: ")) {
                     int endTime = parseIntLine(maybeEndTime);
-                    notes.add(new Note(startTime, endTime, lane));
+                    notes[lane - 1].add(new Note(startTime, endTime, lane, false));
                     // Skip key sounds line
                     br.readLine();
                 } else {
-                    notes.add(new Note(startTime, -1, lane));
+                    notes[lane - 1].add(new Note(startTime, -1, lane, false));
                 }
                 line = br.readLine();
             }
@@ -335,7 +338,7 @@ public class Chart {
                 ",\n description='" + description + '\'' +
                 ",\n timingPoints=" + timingPoints +
                 ",\n sliderVelocities=" + sliderVelocities +
-                ",\n notes=" + notes +
+                ",\n notes=" + Arrays.toString(notes) +
                 ",\n hasError=" + hasError +
                 '}';
     }
