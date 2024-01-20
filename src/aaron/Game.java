@@ -1,9 +1,9 @@
 package aaron;
 
 import aaron.graphics.Screen;
+import aaron.screens.ChartSelect;
 import aaron.screens.Game4Key;
 
-import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.Color;
@@ -15,14 +15,16 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Game extends JPanel implements KeyListener {
-    public static Font fontSmall = new Font("Aller", Font.PLAIN, 18);
+    public static Font fontSmall = new Font("Aller", Font.PLAIN, 24);
+    public static Font fontSmaller = fontSmall.deriveFont(20f);
+    public static Font fontMedium = fontSmall.deriveFont(64f);
 
-    public Game() throws LineUnavailableException, IOException {
+    public Game() {
+        setLayout(null);
         setBackground(Color.BLACK);
         addKeyListener(this);
         setFocusable(true);
@@ -31,6 +33,9 @@ public class Game extends JPanel implements KeyListener {
             repaint();
         });
         frameRenderer.start();
+    }
+
+    public void start() {
         switchScreen(currentScreen);
     }
 
@@ -40,13 +45,15 @@ public class Game extends JPanel implements KeyListener {
     Toolkit toolkit = Toolkit.getDefaultToolkit();
 
     public enum Screens {
-        GAME_4KEY
+        GAME_4KEY,
+        CHART_SELECT
     }
 
-    Screens currentScreen = Screens.GAME_4KEY;
+    Screens currentScreen = Screens.CHART_SELECT;
 
     Map<Screens, Screen> screens = new HashMap<>() {{
         put(Screens.GAME_4KEY, new Game4Key());
+        put(Screens.CHART_SELECT, new ChartSelect());
     }};
 
     /**
@@ -54,7 +61,7 @@ public class Game extends JPanel implements KeyListener {
      *
      * @param screen New screen
      */
-    public void switchScreen(Screens screen) throws LineUnavailableException, IOException {
+    public void switchScreen(Screens screen) {
         screens.get(currentScreen).end();
         currentScreen = screen;
         screens.get(currentScreen).start();
@@ -73,6 +80,11 @@ public class Game extends JPanel implements KeyListener {
         g2dBuffer.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2dBuffer.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2dBuffer.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2dBuffer.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        g2dBuffer.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g2dBuffer.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+        g2dBuffer.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+        g2dBuffer.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2dBuffer.setFont(Game.fontSmall);
 
         // Render the screen

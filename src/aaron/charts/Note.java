@@ -5,6 +5,7 @@ public class Note {
     private int endTime;
     private final int lane;
     private boolean isHit;
+    private boolean isReleased = false;
 
     public Note(int startTime, int endTime, int lane, boolean isHit) {
         this.startTime = startTime;
@@ -39,6 +40,14 @@ public class Note {
 
     public void setHit(boolean hit) {
         isHit = hit;
+    }
+
+    public boolean isReleased() {
+        return isReleased;
+    }
+
+    public void setReleased(boolean released) {
+        isReleased = released;
     }
 
     public String toString() {

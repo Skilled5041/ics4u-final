@@ -1,15 +1,15 @@
 package aaron;
 
-import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JFrame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 
 public class Main {
-    public static void main(String[] args) throws LineUnavailableException, IOException {
-        JFrame frame = new JFrame("Game");
-        Game game = new Game();
+    public static JFrame frame = new JFrame("Game");
+    public static Game game = new Game();
+
+    public static void main(String[] args) {
+        game.start();
         frame.add(game);
         frame.setSize(Game.WIDTH, Game.HEIGHT);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
