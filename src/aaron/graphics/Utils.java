@@ -16,4 +16,10 @@ public class Utils {
     public static void drawCenteredImage(Graphics2D g2d, int x, int y, BufferedImage image, double scale) {
         g2d.drawImage(image, x - (int) (image.getWidth() * scale / 2), y - (int) (image.getHeight() * scale / 2), (int) (image.getWidth() * scale), (int) (image.getHeight() * scale), null);
     }
+
+    public static void drawCenteredString(Graphics2D g2d, int x, int y, String text) {
+        int width = g2d.getFontMetrics().stringWidth(text);
+        int height = g2d.getFontMetrics().getHeight();
+        g2d.drawString(text, x - width / 2, y + height / 4);
+    }
 }

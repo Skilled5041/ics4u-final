@@ -2,8 +2,9 @@ package aaron.graphics;
 
 import java.awt.Graphics2D;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseWheelListener;
 
-public interface Screen extends KeyListener {
+public interface Screen extends KeyListener, MouseWheelListener {
     /**
      * Called when the game transitions to this state
      */

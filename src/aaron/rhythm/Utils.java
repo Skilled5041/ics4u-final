@@ -44,7 +44,7 @@ public class Utils {
     }
 
     public static double getPerfectAccuracy() {
-        return 0.9825;
+        return 1;
     }
 
     public static double getGreatAccuracy() {

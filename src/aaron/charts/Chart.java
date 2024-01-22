@@ -1,3 +1,5 @@
+// Aaron Ye 2024-
+
 package aaron.charts;
 
 import javax.imageio.ImageIO;

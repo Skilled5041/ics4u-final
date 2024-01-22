@@ -1,5 +1,8 @@
 package aaron.screens;
 
+import aaron.Game;
+import aaron.Main;
+import aaron.SettingsManager;
 import aaron.charts.Chart;
 import aaron.charts.Note;
 import aaron.graphics.EasingFunctions;
@@ -13,6 +16,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -21,17 +25,19 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import static aaron.Game.fontMedium;
 import static aaron.Utils.Clamp;
 import static aaron.graphics.Utils.drawCenteredImage;
+import static aaron.graphics.Utils.drawCenteredString;
 
 public class Game4Key implements Screen {
     public Game4Key() {
     }
 
     private final ArrayList<Note>[] currentGameNotes = (ArrayList<Note>[]) new ArrayList[4];
-    private final Map<String, BufferedImage> rankingImages = new HashMap<>() {{
+    public static final Map<String, BufferedImage> rankingImages = new HashMap<>() {{
         try {
             put("SS", ImageIO.read(new File("resources/skin/rank_ss.png")));
             put("S", ImageIO.read(new File("resources/skin/rank_s.png")));
@@ -72,25 +78,68 @@ public class Game4Key implements Screen {
 
     @Override
     public void start() {
-        chart = Chart.parse("charts/3", "23107.qua");
+        // Reset everything
+        minIndex = new int[4];
+        laneHeld[0] = false;
+        laneHeld[1] = false;
+        laneHeld[2] = false;
+        laneHeld[3] = false;
+        accuracy = 1;
+        accuracySampleCount = 0;
+        hitOffsets = new LinkedList<>();
+        averageHitOffset = 0;
+        missCount = 0;
+        okayCount = 0;
+        goodCount = 0;
+        greatCount = 0;
+        perfectCount = 0;
+        marvelousCount = 0;
+        currentCombo = 0;
+        maxCombo = 0;
+        score = 0;
+
+        scrollSpeed = SettingsManager.getScrollSpeed();
         assert chart != null;
         song = chart.getAudio();
+        // Pre-scale the image since scaling it very frame is very slow
+        scaledBackground = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = scaledBackground.createGraphics();
+        g2d.drawImage(chart.getBackground(), 0, 0, 1920, 1080, null);
+        // Dim the background
+        g2d.setColor(new Color(0, 0, 0, 220));
+        g2d.fillRect(0, 0, 1920, 1080);
+        // Play area
+        g2d.setColor(new Color(0, 0, 0, 255));
+        aaron.graphics.Utils.drawCenteredFilledRectangle(g2d, 960, 540, 600, 1084);
+        g2d.dispose();
+        Main.background.setBackground(scaledBackground);
 
         // Clone the notes
         for (int i = 0; i < 4; i++) {
             currentGameNotes[i] = new ArrayList<>(chart.getNotes()[i]);
+            // Set hit and released to false
+            for (Note note : currentGameNotes[i]) {
+                note.setHit(false);
+                note.setReleased(false);
+            }
         }
 
-        Timer startTimer = new Timer(3000, e -> {
-            song.start();
-        });
+        Timer startTimer = new Timer(500, e -> song.start());
+        song.setFramePosition(0);
         startTimer.setRepeats(false);
         startTimer.start();
     }
 
+    private BufferedImage scaledBackground;
+
+    public static void setChart(Chart c) {
+        chart = c;
+    }
+
     @Override
     public void end() {
-
+        song.stop();
+        Main.background.clearBackground();
     }
 
     private String currentHitScore = "";
@@ -103,7 +152,7 @@ public class Game4Key implements Screen {
     }
 
     private static Map<String, Integer> judgementToScore = new HashMap<>() {{
-        put("marvelous", 1000);
+        put("marvelous", 1200);
         put("perfect", 1000);
         put("great", 800);
         put("good", 600);
@@ -123,7 +172,7 @@ public class Game4Key implements Screen {
             currentCombo = 0;
         }
 
-        if (hitScore.equals("marvelous")) {
+        if (hitScore.equals("marvelous") || hitScore.equals("perfect")) {
             return;
         }
 
@@ -136,16 +185,20 @@ public class Game4Key implements Screen {
         }
     }
 
-    private Chart chart;
+    private static Chart chart;
     private Clip song;
-    private final int scrollSpeed = 10;
+    private int scrollSpeed = SettingsManager.getScrollSpeed();
     private int[] minIndex = new int[4];
     private final boolean[] laneHeld = new boolean[4];
     private BufferedImage hitGradient;
 
     {
         try {
-            hitGradient = ImageIO.read(new File("resources/skin/hit_gradient.png"));
+            hitGradient = new BufferedImage(150, 1080, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = hitGradient.createGraphics();
+            BufferedImage gradient = ImageIO.read(new File("resources/skin/hit_gradient.png"));
+            g2d.drawImage(gradient, 0, 0, 150, 1080, null);
+            g2d.dispose();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -167,17 +220,26 @@ public class Game4Key implements Screen {
 
     @Override
     public void render(Graphics2D g2d) {
-        // Draw the background
-        g2d.drawImage(chart.getBackground(), 0, 0, 1920, 1080, null);
-
-        // Dim the background
-        g2d.setColor(new Color(0, 0, 0, 220));
-        g2d.fillRect(0, 0, 1920, 1080);
+        // If song is over, switch to the result screen
+        if (!song.isRunning() && song.getFramePosition() == song.getFrameLength()) {
+            song.setFramePosition(0);
+            Result.setChart(chart);
+            Result.setAccuracy(accuracy);
+            Result.setScore(score);
+            Result.setMaxCombo(maxCombo);
+            Result.setMarvelousCount(marvelousCount);
+            Result.setPerfectCount(perfectCount);
+            Result.setGreatCount(greatCount);
+            Result.setGoodCount(goodCount);
+            Result.setOkayCount(okayCount);
+            Result.setMissCount(missCount);
+            Main.game.switchScreen(Game.Screens.RESULT);
+            return;
+        }
 
         // Main play area
         g2d.setStroke(new BasicStroke(2));
         g2d.setColor(new Color(0, 0, 0));
-        aaron.graphics.Utils.drawCenteredFilledRectangle(g2d, 960, 540, 600, 1084);
 
         // Note receptor
         g2d.setColor(new Color(249, 180, 222, 255));
@@ -185,19 +247,21 @@ public class Game4Key implements Screen {
         g2d.drawLine(960 - 300 + 2, 1080 - 100, 960 + 300 - 2, 1080 - 100);
 
         // Draw the columns
-        // TODO: maybe have setting for this
-//        g2d.setColor(new Color(255, 255, 255, 20));
-//        g2d.drawLine(960 - 1, 0, 960 - 1, 1080);
-//        g2d.drawLine(960 - 150 - 1, 0, 960 - 150 - 1, 1080);
-//        g2d.drawLine(960 + 150 - 1, 0, 960 + 150 - 1, 1080);
+        if (SettingsManager.getLaneSeparators()) {
+            g2d.setColor(new Color(255, 255, 255, 20));
+            g2d.drawLine(960 - 1, 0, 960 - 1, 1080);
+            g2d.drawLine(960 - 150 - 1, 0, 960 - 150 - 1, 1080);
+            g2d.drawLine(960 + 150 - 1, 0, 960 + 150 - 1, 1080);
+        }
         long currentSongTime = (long) (song.getLongFramePosition() * 1000 / song.getFormat().getFrameRate());
+        int offset = SettingsManager.getOffset();
         for (int i = 0; i < currentGameNotes.length; i++) {
             ArrayList<Note> notesList = currentGameNotes[i];
             for (int j = minIndex[i]; j < notesList.size(); j++) {
                 Note note = notesList.get(j);
 
                 // If a normal note has gone offscreen, and it has not been hit, count it as a miss
-                if (note.getStartTime() + aaron.rhythm.Utils.getMaxOkayTime() < currentSongTime && note.getEndTime() == -1 && !note.isHit()) {
+                if (note.getStartTime() + aaron.rhythm.Utils.getMaxOkayTime() + offset < currentSongTime && note.getEndTime() == -1 && !note.isHit()) {
                     minIndex[i] = j + 1;
                     accuracySampleCount++;
                     accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMissAccuracy(), accuracySampleCount);
@@ -206,7 +270,7 @@ public class Game4Key implements Screen {
                     note.setHit(true);
                     continue;
                     // If the end of a long note has gone offscreen, and it has not been released
-                } else if (note.getEndTime() != -1 && note.getEndTime() + aaron.rhythm.Utils.getMaxOkayTime() < currentSongTime && !note.isReleased()) {
+                } else if (note.getEndTime() != -1 && note.getEndTime() + aaron.rhythm.Utils.getMaxOkayTime() + offset < currentSongTime && !note.isReleased()) {
                     minIndex[i] = j + 1;
                     accuracySampleCount++;
                     accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMissAccuracy(), accuracySampleCount);
@@ -214,7 +278,7 @@ public class Game4Key implements Screen {
                 }
                 // If the start of a long note has gone offscreen,
                 // and it has not been hit, count it as a miss
-                if (note.getEndTime() != -1 && note.getStartTime() + aaron.rhythm.Utils.getMaxOkayTime() < currentSongTime && !note.isHit()) {
+                if (note.getEndTime() != -1 && note.getStartTime() + aaron.rhythm.Utils.getMaxOkayTime() + offset < currentSongTime && !note.isHit()) {
                     accuracySampleCount++;
                     accuracy = aaron.rhythm.Utils.calculateCumulativeAccuracy(accuracy, Utils.getMissAccuracy(), accuracySampleCount);
                     setHitScore("miss");
@@ -222,24 +286,26 @@ public class Game4Key implements Screen {
                     note.setHit(true);
                 }
                 // Break if notes are offscreen (they have not appeared yet)
-                if (note.getStartTime() > currentSongTime + aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed)) {
+                if (note.getStartTime() + offset > currentSongTime + aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed)) {
                     break;
                 }
 
                 // Normal note
                 if (note.getEndTime() == -1) {
-                    drawNote(g2d, note.getLane(), note.getStartTime(), currentSongTime);
+                    drawNote(g2d, note.getLane(), note.getStartTime() + offset, currentSongTime);
                 } else if (!laneHeld[i]) {
-                    drawLongNote(g2d, note.getLane(), note.getStartTime(), note.getEndTime(), currentSongTime);
+                    drawLongNote(g2d, note.getLane(), note.getStartTime() + offset, note.getEndTime(), currentSongTime);
                 } else {
-                    drawLongNoteHeld(g2d, note.getLane(), note.getStartTime(), note.getEndTime(), currentSongTime);
+                    drawLongNoteHeld(g2d, note.getLane(), note.getStartTime() + offset, note.getEndTime() + offset, currentSongTime);
                 }
             }
         }
 
-        for (int i = 0; i < 4; i++) {
-            if (laneHeld[i]) {
-                g2d.drawImage(hitGradient, 960 - 300 + (i * 150), 600, 150, 1080, null);
+        if (SettingsManager.getHitGlow()) {
+            for (int i = 0; i < 4; i++) {
+                if (laneHeld[i]) {
+                    g2d.drawImage(hitGradient, 960 - 300 + (i * 150), 600, null);
+                }
             }
         }
 
@@ -248,7 +314,7 @@ public class Game4Key implements Screen {
         g2d.drawString(String.format("%6.2f%%", accuracy * 100), 1920 - 110, 30);
 
         // Draw score
-        g2d.drawString(String.format("%08d", score), 1920 - 125, 70);
+        g2d.drawString(String.format("%010d", score), 1920 - 155, 70);
 
         // Grade
         if (accuracy == 1) {
@@ -267,16 +333,13 @@ public class Game4Key implements Screen {
 
         // Draw current hit score
         if (!currentHitScore.isEmpty()) {
-            double scale = EasingFunctions.easeInOutExpo((double) (hitScoreTime + 100 - currentSongTime) / 100);
-            drawCenteredImage(g2d, 1920 / 2, 1080 / 2 - 200, hitScoreImages.get(currentHitScore), Clamp(1 - scale, 0, 1) / 4 + 0.25);
+            double scale = EasingFunctions.easeInOutExpo((double) (hitScoreTime + 120 - currentSongTime) / 120);
+            drawCenteredImage(g2d, 1920 / 2, 1080 / 2 - 200, hitScoreImages.get(currentHitScore), Clamp(1 - scale, 0, 1) / 2);
         }
 
         // Draw combo text
-        g2d.setColor(new Color(255, 255, 255, 255));
         g2d.setFont(fontMedium);
-        g2d.drawString(currentCombo + "x", 10, 1080 - 25);
-
-        // Hit timing
+        drawCenteredString(g2d, 1920 / 2, 650, String.format("%d", currentCombo));
 
         // Hit meter
         drawCenteredImage(g2d, 1920 / 2, 500, hitMetre, 1);
@@ -296,10 +359,14 @@ public class Game4Key implements Screen {
 
     private void drawNote(Graphics2D g2d, int lane, int time, long currentSongTime) {
         g2d.setStroke(new BasicStroke(1));
-        if (lane == 1 || lane == 4) {
-            g2d.setColor(new Color(253, 253, 253, 255));
-        } else {
-            g2d.setColor(new Color(80, 195, 247, 255));
+        if (lane == 1) {
+            g2d.setColor(SettingsManager.getLane1Color());
+        } else if (lane == 2) {
+            g2d.setColor(SettingsManager.getLane2Color());
+        } else if (lane == 3) {
+            g2d.setColor(SettingsManager.getLane3Color());
+        } else if (lane == 4) {
+            g2d.setColor(SettingsManager.getLane4Color());
         }
 
         g2d.fillRect(960 - 450 + (lane * 150), convertNoteTimeToY(time, currentSongTime, scrollSpeed) - 100, 150, 50);
@@ -307,10 +374,14 @@ public class Game4Key implements Screen {
 
     public void drawLongNote(Graphics2D g2d, int lane, int startTime, int endTime, long currentSongTime) {
         g2d.setStroke(new BasicStroke(1));
-        if (lane == 1 || lane == 4) {
-            g2d.setColor(new Color(253, 253, 253, 255));
-        } else {
-            g2d.setColor(new Color(80, 195, 247, 255));
+        if (lane == 1) {
+            g2d.setColor(SettingsManager.getLane1Color());
+        } else if (lane == 2) {
+            g2d.setColor(SettingsManager.getLane2Color());
+        } else if (lane == 3) {
+            g2d.setColor(SettingsManager.getLane3Color());
+        } else if (lane == 4) {
+            g2d.setColor(SettingsManager.getLane4Color());
         }
 
         g2d.fillRect(960 - 450 + (lane * 150),
@@ -321,10 +392,14 @@ public class Game4Key implements Screen {
 
     public void drawLongNoteHeld(Graphics2D g2d, int lane, int startTime, int endTime, long currentSongTime) {
         g2d.setStroke(new BasicStroke(1));
-        if (lane == 1 || lane == 4) {
-            g2d.setColor(new Color(253, 253, 253, 255));
-        } else {
-            g2d.setColor(new Color(80, 195, 247, 255));
+        if (lane == 1) {
+            g2d.setColor(SettingsManager.getLane1Color());
+        } else if (lane == 2) {
+            g2d.setColor(SettingsManager.getLane2Color());
+        } else if (lane == 3) {
+            g2d.setColor(SettingsManager.getLane3Color());
+        } else if (lane == 4) {
+            g2d.setColor(SettingsManager.getLane4Color());
         }
 
         if (currentSongTime < startTime) {
@@ -373,6 +448,13 @@ public class Game4Key implements Screen {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        // Esc to exit
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            song.stop();
+            Main.game.switchScreen(Game.Screens.CHART_SELECT);
+            return;
+        }
+
         int lane = keycodeToLane.getOrDefault(e.getKeyCode(), -1);
 
 
@@ -385,15 +467,13 @@ public class Game4Key implements Screen {
 
             laneHeld[lane - 1] = true;
             // Return if there are no more notes
-            for (int i = 0; i < 4; i++) {
-                if (minIndex[i] >= currentGameNotes[i].size()) {
-                    return;
-                }
+            if (minIndex[lane - 1] >= currentGameNotes[lane - 1].size()) {
+                return;
             }
 
             Note nextNote = currentGameNotes[lane - 1].get(minIndex[lane - 1]);
             // Ignore note since too far away
-            int timingInaccuracy = (int) Math.abs(nextNote.getStartTime() - Utils.getCurrentSongTime(song));
+            int timingInaccuracy = (int) Math.abs(nextNote.getStartTime() + SettingsManager.getOffset() - Utils.getCurrentSongTime(song));
             if (timingInaccuracy > 164) {
                 return;
             }
@@ -412,7 +492,7 @@ public class Game4Key implements Screen {
                 hitOffsets.remove();
             }
             hitOffsets.add((int) -((nextNote.getStartTime() - Utils.getCurrentSongTime(song))));
-            averageHitOffset = (int) (averageHitOffset * 0.6 + (int) -((nextNote.getStartTime() - Utils.getCurrentSongTime(song))) * 0.4);
+            averageHitOffset = (int) (averageHitOffset * 0.6 + (int) -((nextNote.getStartTime() + SettingsManager.getOffset() - Utils.getCurrentSongTime(song))) * 0.4);
 
             nextNote.setHit(true);
         }
@@ -426,10 +506,8 @@ public class Game4Key implements Screen {
         if (lane >= 1 && lane <= 4) {
             laneHeld[lane - 1] = false;
 
-            for (int i = 0; i < 4; i++) {
-                if (minIndex[i] >= currentGameNotes[i].size()) {
-                    return;
-                }
+            if (minIndex[lane - 1] >= currentGameNotes[lane - 1].size()) {
+                return;
             }
 
             // Ignore normal note
@@ -438,9 +516,8 @@ public class Game4Key implements Screen {
             }
 
             Note nextNote = currentGameNotes[lane - 1].get(minIndex[lane - 1]);
-            // Ignore note since too far away
-            int timingInaccuracy = (int) Math.abs(nextNote.getEndTime() - Utils.getCurrentSongTime(song));
-            if (timingInaccuracy > 164) {
+            int timingInaccuracy = (int) Math.abs(nextNote.getEndTime() + SettingsManager.getOffset() - Utils.getCurrentSongTime(song));
+            if (!nextNote.isHit()) {
                 return;
             }
 
@@ -452,6 +529,8 @@ public class Game4Key implements Screen {
                 missCount++;
                 setHitScore("miss");
             } else {
+                // Long notes are more lenient
+                timingInaccuracy /= 2;
                 handleTiming(timingInaccuracy);
             }
 
@@ -460,7 +539,7 @@ public class Game4Key implements Screen {
             }
 
             hitOffsets.add((int) -((nextNote.getEndTime() - Utils.getCurrentSongTime(song))));
-            averageHitOffset = (int) (averageHitOffset * 0.6 + (int) -((nextNote.getEndTime() - Utils.getCurrentSongTime(song))) * 0.4);
+            averageHitOffset = (int) Clamp((averageHitOffset * 0.6 + (int) -((nextNote.getEndTime() + SettingsManager.getOffset() - Utils.getCurrentSongTime(song))) * 0.4), -127, 127);
         }
     }
 
@@ -486,5 +565,21 @@ public class Game4Key implements Screen {
             marvelousCount++;
             setHitScore("marvelous");
         }
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        // Change scroll speed
+        if (e.getWheelRotation() < 0) {
+            // Scroll up
+            if (scrollSpeed < 100) {
+                scrollSpeed++;
+            }
+        } else {
+            if (scrollSpeed > 1) {
+                scrollSpeed--;
+            }
+        }
+        SettingsManager.setScrollSpeed(scrollSpeed);
     }
 }

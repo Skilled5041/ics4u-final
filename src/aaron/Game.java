@@ -3,10 +3,11 @@ package aaron;
 import aaron.graphics.Screen;
 import aaron.screens.ChartSelect;
 import aaron.screens.Game4Key;
+import aaron.screens.MainMenu;
+import aaron.screens.Result;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -14,24 +15,24 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Game extends JPanel implements KeyListener {
+public class Game extends JPanel implements KeyListener, MouseWheelListener {
     public static Font fontSmall = new Font("Aller", Font.PLAIN, 24);
     public static Font fontSmaller = fontSmall.deriveFont(20f);
     public static Font fontMedium = fontSmall.deriveFont(64f);
 
     public Game() {
-        setLayout(null);
-        setBackground(Color.BLACK);
+        setOpaque(false);
         addKeyListener(this);
+        addMouseWheelListener(this);
         setFocusable(true);
         int fpsCap = 300;
-        Timer frameRenderer = new Timer((int) Math.ceil(1000.0 / fpsCap),  e -> {
-            repaint();
-        });
+        Timer frameRenderer = new Timer((int) Math.ceil(1000.0 / fpsCap), e -> repaint());
         frameRenderer.start();
     }
 
@@ -44,16 +45,29 @@ public class Game extends JPanel implements KeyListener {
     public static int HEIGHT = 1080;
     Toolkit toolkit = Toolkit.getDefaultToolkit();
 
-    public enum Screens {
-        GAME_4KEY,
-        CHART_SELECT
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        screens.get(currentScreen).mouseWheelMoved(e);
     }
 
-    Screens currentScreen = Screens.CHART_SELECT;
+    public enum Screens {
+        GAME_4KEY,
+        CHART_SELECT,
+        RESULT,
+        MAIN_MENU,
+        SETTINGS,
+        ABOUT
+    }
+
+    Screens currentScreen = Screens.MAIN_MENU;
 
     Map<Screens, Screen> screens = new HashMap<>() {{
         put(Screens.GAME_4KEY, new Game4Key());
         put(Screens.CHART_SELECT, new ChartSelect());
+        put(Screens.RESULT, new Result());
+        put(Screens.MAIN_MENU, new MainMenu());
+        put(Screens.SETTINGS, new aaron.screens.Settings());
+        put(Screens.ABOUT, new aaron.screens.About());
     }};
 
     /**
