@@ -1,3 +1,6 @@
+// 2024-01-21
+// Aaron Ye
+
 package aaron.graphics;
 
 import aaron.Game;
@@ -16,6 +19,7 @@ public class ChartSelector extends JComponent implements Comparable<ChartSelecto
     public final static int WIDTH = 1100;
     public final static int HEIGHT = 160;
     private final Chart chart;
+    // If the player is selecting this chart currently
     private boolean isSelected = false;
     public boolean isSelected() {
         return isSelected;
@@ -59,6 +63,7 @@ public class ChartSelector extends JComponent implements Comparable<ChartSelecto
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2d.setFont(Game.fontSmall);
 
+        // Change colour if selected
         if (!isSelected) {
             g2d.setColor(new Color(52, 52, 52, 255));
         } else {

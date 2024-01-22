@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron.graphics;
 
 import aaron.Game;
@@ -23,7 +26,9 @@ public class CustomButton extends JComponent implements MouseListener {
     public void setFont(Font font) {
         this.font = font;
     }
+    // The current background colour
     private Color currentBackground = new Color(52, 52, 52, 255);
+    // The base background colour
     private Color normalBackground = new Color(52, 52, 52, 255);
     public void setBackground(Color bg) {
         this.normalBackground = bg;
@@ -51,12 +56,14 @@ public class CustomButton extends JComponent implements MouseListener {
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2d.setFont(font);
 
+        // Background
         g2d.setColor(currentBackground);
         g2d.fillRect(0, 0, width, height);
         // Outline
         g2d.setStroke(new BasicStroke(4));
         g2d.setColor(new Color(5, 134, 228, 255));
         g2d.drawRect(0, 0, width, height);
+        // Label
         drawCenteredString(g2d, width / 2, height / 2, label);
     }
 

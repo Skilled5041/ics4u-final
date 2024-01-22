@@ -12,10 +12,13 @@ Settings Information:
 - Hit glow is the pink gradient that appears when you press A, S, K, L in game
 - Lane separators are lines that separate the lanes
 - Scroll speed is how fast the notes scroll down (the notes are the same, but they appear visually different). Lower scroll speed gives you more time to react, but the notes are denser and can be harder to read.
+- Having a very slow scroll speed will cause notes to overlay, but even if they do not, it is still pretty much unplayable due to the note density and slow speed
 - Offset is used if your audio has delay (e.g. with bluetooth headphones). A positive offset makes notes appear later (used when your audio is delayed).
 - The colours of the notes of each lane can be customised
 
 Notes:
+- The game might look different depending on your operating system's scale
+- Java 21 is used to make the game
 - Do not modify or delete the settings file
 - The skin can be customised by modifying the resources/skin directory
 - At least one chart is required for the game to run properly.
@@ -26,6 +29,7 @@ Gameplay Info:
 - The game is played with the A, S, K, L keys
 - You can exit mid game by pressing escape
 - You can scroll through the maps using the scroll wheel or up/down arrow keys
+- Click play or use space to play the selected map
 - You can change the scroll speed in game by using the scroll wheel
 - Accuracy is calculated by how many ms off you are from hitting a note perfectly
 - You must time the initial timing and release of a long note (the release is more lenient)

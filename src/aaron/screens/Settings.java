@@ -18,6 +18,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseWheelEvent;
 
 public class Settings implements Screen {
+    // Used to change settings
     private static final JCheckBox hitGlowCheckBox = new JCheckBox("Enable Hit Glow");
     private static final JCheckBox lineSeparatorCheckBox = new JCheckBox("Enable Lane Separators");
     private static final SpinnerModel scrollSpeedModel = new SpinnerNumberModel(SettingsManager.getScrollSpeed(), 1, 100, 1);
@@ -30,7 +31,11 @@ public class Settings implements Screen {
     private static final CustomButton lane4Color = new CustomButton(800, 200, "Lane 4 Color");
     private static final CustomButton backButton = new CustomButton(800, 200, "Back");
 
+    /**
+     * Avoids null error
+     */
     public static void init() {
+        // Set location of components
         hitGlowCheckBox.setBounds(850, 100, 200, 40);
         lineSeparatorCheckBox.setBounds(850, 150, 200, 40);
         scrollSpeed.setBounds(850, 200, 200, 40);
@@ -61,6 +66,7 @@ public class Settings implements Screen {
         lane4Color.setVisible(false);
         backButton.setVisible(false);
 
+        // Set up handlers
         backButton.onClick(e -> {
             Main.game.switchScreen(Game.Screens.MAIN_MENU);
             SettingsManager.save();
@@ -98,6 +104,12 @@ public class Settings implements Screen {
             lane4Color.setBackground(SettingsManager.getLane4Color());
         });
 
+        hitGlowCheckBox.addActionListener(e -> SettingsManager.setHitGlow(hitGlowCheckBox.isSelected()));
+        lineSeparatorCheckBox.addActionListener(e -> SettingsManager.setLaneSeparators(lineSeparatorCheckBox.isSelected()));
+        scrollSpeed.addChangeListener(e -> SettingsManager.setScrollSpeed((int) scrollSpeed.getValue()));
+        offset.addChangeListener(e -> SettingsManager.setOffset((int) offset.getValue()));
+
+
         lane1Color.setBackground(SettingsManager.getLane1Color());
         lane2Color.setBackground(SettingsManager.getLane2Color());
         lane3Color.setBackground(SettingsManager.getLane3Color());
@@ -106,6 +118,7 @@ public class Settings implements Screen {
 
     @Override
     public void start() {
+        // Make them visible and set them to the correct values
         hitGlowCheckBox.setSelected(SettingsManager.getHitGlow());
         lineSeparatorCheckBox.setSelected(SettingsManager.getLaneSeparators());
         scrollSpeed.setValue(SettingsManager.getScrollSpeed());
@@ -120,11 +133,6 @@ public class Settings implements Screen {
         lane3Color.setVisible(true);
         lane4Color.setVisible(true);
         backButton.setVisible(true);
-
-        hitGlowCheckBox.addActionListener(e -> SettingsManager.setHitGlow(hitGlowCheckBox.isSelected()));
-        lineSeparatorCheckBox.addActionListener(e -> SettingsManager.setLaneSeparators(lineSeparatorCheckBox.isSelected()));
-        scrollSpeed.addChangeListener(e -> SettingsManager.setScrollSpeed((int) scrollSpeed.getValue()));
-        offset.addChangeListener(e -> SettingsManager.setOffset((int) offset.getValue()));
 
         MainMenu.menuLoop.loop(Clip.LOOP_CONTINUOUSLY);
     }

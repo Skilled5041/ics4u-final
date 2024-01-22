@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron.screens;
 
 import aaron.Game;
@@ -25,7 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 
 import static aaron.Game.fontMedium;
 import static aaron.Utils.Clamp;
@@ -37,6 +39,7 @@ public class Game4Key implements Screen {
     }
 
     private final ArrayList<Note>[] currentGameNotes = (ArrayList<Note>[]) new ArrayList[4];
+    // Maps a grade to an image of that grade
     public static final Map<String, BufferedImage> rankingImages = new HashMap<>() {{
         try {
             put("SS", ImageIO.read(new File("resources/skin/rank_ss.png")));
@@ -50,6 +53,7 @@ public class Game4Key implements Screen {
         }
     }};
 
+    // Maps a hit score to an image of that hit score
     private final Map<String, BufferedImage> hitScoreImages = new HashMap<>() {{
         try {
             put("marvelous", ImageIO.read(new File("resources/skin/marvelous.png")));
@@ -67,6 +71,7 @@ public class Game4Key implements Screen {
     private BufferedImage hitMetre;
     private BufferedImage arrow;
 
+    // Try to open the images
     {
         try {
             hitMetre = ImageIO.read(new File("resources/skin/hit_metre.png"));
@@ -124,6 +129,7 @@ public class Game4Key implements Screen {
             }
         }
 
+        // Star the song with a 500 ms countdown
         Timer startTimer = new Timer(500, e -> song.start());
         song.setFramePosition(0);
         startTimer.setRepeats(false);
@@ -142,6 +148,7 @@ public class Game4Key implements Screen {
         Main.background.clearBackground();
     }
 
+    // Used for hit score animation
     private String currentHitScore = "";
     int hitScoreTimeDuration = 300;
     Timer clearHitScoreTimer = new Timer(hitScoreTimeDuration, e -> currentHitScore = "");
@@ -151,6 +158,7 @@ public class Game4Key implements Screen {
         clearHitScoreTimer.setRepeats(false);
     }
 
+    // Maps a judgement to a score
     private static Map<String, Integer> judgementToScore = new HashMap<>() {{
         put("marvelous", 1200);
         put("perfect", 1000);
@@ -160,11 +168,17 @@ public class Game4Key implements Screen {
         put("miss", 0);
     }};
 
+    // Combo and score
     int currentCombo = 0;
     int maxCombo = 0;
     int score = 0;
 
+    /**
+     * Sets the hit score when a note is hit or missed
+     * @param hitScore
+     */
     private void setHitScore(String hitScore) {
+        // Update combo and score
         currentCombo++;
         maxCombo = Math.max(maxCombo, currentCombo);
         score += (int) (judgementToScore.get(hitScore) * (1 + (Math.max(1, Math.log10(currentCombo)) - 1) * 0.1F));
@@ -176,6 +190,7 @@ public class Game4Key implements Screen {
             return;
         }
 
+        // Show animation
         hitScoreTime = (int) Utils.getCurrentSongTime(song);
         currentHitScore = hitScore;
         if (clearHitScoreTimer.isRunning()) {
@@ -192,6 +207,7 @@ public class Game4Key implements Screen {
     private final boolean[] laneHeld = new boolean[4];
     private BufferedImage hitGradient;
 
+    // Load files
     {
         try {
             hitGradient = new BufferedImage(150, 1080, BufferedImage.TYPE_INT_ARGB);
@@ -204,13 +220,16 @@ public class Game4Key implements Screen {
         }
     }
 
+    // Accuracy
     private double accuracy = 1;
     private int accuracySampleCount = 0;
 
     // In ms
+    // Used for hit metre
     private Queue<Integer> hitOffsets = new LinkedList<>();
     private int averageHitOffset = 0;
 
+    // Used for result screen
     private int missCount = 0;
     private int okayCount = 0;
     private int goodCount = 0;
@@ -301,6 +320,7 @@ public class Game4Key implements Screen {
             }
         }
 
+        // Hit glow
         if (SettingsManager.getHitGlow()) {
             for (int i = 0; i < 4; i++) {
                 if (laneHeld[i]) {
@@ -349,6 +369,7 @@ public class Game4Key implements Screen {
         g2d.setColor(new Color(255, 255, 255, 200));
         g2d.setStroke(new BasicStroke(1));
 
+        // Show hit offsets
         for (int i : hitOffsets) {
             if (Math.abs(i) > 127) {
                 continue;
@@ -357,6 +378,13 @@ public class Game4Key implements Screen {
         }
     }
 
+    /**
+     * Draws a normal note
+     * @param g2d Graphics2D object
+     * @param lane Lane of the note
+     * @param time Time of the note
+     * @param currentSongTime Current time of the song
+     */
     private void drawNote(Graphics2D g2d, int lane, int time, long currentSongTime) {
         g2d.setStroke(new BasicStroke(1));
         if (lane == 1) {
@@ -372,6 +400,14 @@ public class Game4Key implements Screen {
         g2d.fillRect(960 - 450 + (lane * 150), convertNoteTimeToY(time, currentSongTime, scrollSpeed) - 100, 150, 50);
     }
 
+    /**
+     * Draws a long note
+     * @param g2d Graphics2D object
+     * @param lane Lane of the note
+     * @param startTime Start time of the note
+     * @param endTime End time of the note
+     * @param currentSongTime Current time of the song
+     */
     public void drawLongNote(Graphics2D g2d, int lane, int startTime, int endTime, long currentSongTime) {
         g2d.setStroke(new BasicStroke(1));
         if (lane == 1) {
@@ -390,6 +426,14 @@ public class Game4Key implements Screen {
                 getLongNoteHeight(startTime, endTime, scrollSpeed));
     }
 
+    /**
+     * Draws a long note that is being held
+     * @param g2d Graphics2D object
+     * @param lane Lane of the note
+     * @param startTime Start time of the note
+     * @param endTime End time of the note
+     * @param currentSongTime Current time of the song
+     */
     public void drawLongNoteHeld(Graphics2D g2d, int lane, int startTime, int endTime, long currentSongTime) {
         g2d.setStroke(new BasicStroke(1));
         if (lane == 1) {
@@ -416,24 +460,46 @@ public class Game4Key implements Screen {
         }
     }
 
+    /**
+     * Converts a note time to a y coordinate
+     * @param time Time of the note
+     * @param currentSongTime Current time of the song
+     * @param scrollSpeed Scroll speed
+     * @return Y coordinate of the note
+     */
     private static int convertNoteTimeToY(int time, long currentSongTime, int scrollSpeed) {
         int scrollSpeedTimeWidth = aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed);
         double decimal = (double) (time - currentSongTime) / scrollSpeedTimeWidth;
         return (int) (1080 - decimal * 1080);
     }
 
+    /**
+     * Gets the end y coordinate of a long note
+     * @param endTime End time of the note
+     * @param currentSongTime Current time of the song
+     * @param scrollSpeed Scroll speed
+     * @return End y coordinate of the long note
+     */
     private static int getLongNoteEndY(int endTime, long currentSongTime, int scrollSpeed) {
         int scrollSpeedTimeWidth = aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed);
         double decimal = (double) (endTime - currentSongTime) / scrollSpeedTimeWidth;
         return (int) (1080 - decimal * 1080);
     }
 
+    /**
+     * Gets the height of a long note
+     * @param startTime Start time of the note
+     * @param endTime End time of the note
+     * @param scrollSpeed Scroll speed
+     * @return Height of the long note
+     */
     private int getLongNoteHeight(int startTime, int endTime, int scrollSpeed) {
         int scrollSpeedTimeWidth = aaron.rhythm.Utils.scrollSpeedToTimeWidth(scrollSpeed);
         double decimal = (double) (endTime - startTime) / scrollSpeedTimeWidth;
         return (int) (decimal * 1080);
     }
 
+    // Maps a keycode to a lane
     Map<Integer, Integer> keycodeToLane = new HashMap<>() {{
         put(KeyEvent.VK_A, 1);
         put(KeyEvent.VK_S, 2);
@@ -543,6 +609,10 @@ public class Game4Key implements Screen {
         }
     }
 
+    /**
+     * Handles the timing of a note
+     * @param timingInaccuracy Timing inaccuracy of the note
+     */
     private void handleTiming(int timingInaccuracy) {
         if (timingInaccuracy > Utils.getMaxGoodTime()) {
             accuracy = Utils.calculateCumulativeAccuracy(accuracy, Utils.getOkayAccuracy(), accuracySampleCount);

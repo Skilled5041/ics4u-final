@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron.screens;
 
 import aaron.Game;
@@ -29,6 +32,9 @@ public class ChartSelect implements Screen {
     private static final CustomButton playButton = new CustomButton(500, 200, "Play");
     private static final CustomButton backButton = new CustomButton(500, 200, "Back");
 
+    /**
+     * Initialises the charts
+     */
     public static void init() {
         // Get directories inside the charts directory
         File chartsDir = new File("charts");
@@ -38,6 +44,7 @@ public class ChartSelect implements Screen {
             return;
         }
 
+        // Loads all the charts
         for (String s : subDirs) {
             charts.put(s.toLowerCase(), new ArrayList<>());
             File dir = new File("charts/" + s);
@@ -53,7 +60,7 @@ public class ChartSelect implements Screen {
             }
         }
 
-        // Create a new ChartSelector for each chart
+        // Create chart selectors
         for (String s : charts.keySet()) {
             for (Chart chart : charts.get(s)) {
                 ChartSelector chartSelector = new ChartSelector(chart);
@@ -63,8 +70,10 @@ public class ChartSelect implements Screen {
             }
         }
 
+        // Sort them
         Collections.sort(chartSelectors);
 
+        // Select the first chart
         chartSelectors.get(chartIndex).setSelected(true);
         Main.game.add(playButton);
         playButton.setLocation(200, 350);
@@ -79,15 +88,20 @@ public class ChartSelect implements Screen {
         backButton.setVisible(false);
     }
 
-    private static ArrayList<ChartSelector> chartSelectors = new ArrayList<>();
+    private static final ArrayList<ChartSelector> chartSelectors = new ArrayList<>();
+    // The chart that is currently selected
     private static int chartIndex = 0;
 
+    /**
+     * Shows the chart list based on the current chart index
+     */
     public static void showChartSelectors() {
         // Hide all chart selectors
         for (ChartSelector chartSelector : chartSelectors) {
             chartSelector.setVisible(false);
         }
 
+        // SHow up to next 5 chart selectors
         int index = 0;
         for (int i = chartIndex; i < Math.min(chartIndex + 5, chartSelectors.size()); i++) {
             chartSelectors.get(i).setVisible(true);
@@ -98,6 +112,7 @@ public class ChartSelect implements Screen {
 
     @Override
     public void start() {
+        // Sets the background image
         BufferedImage background = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = background.createGraphics();
         g2d.drawImage(chartSelectors.get(chartIndex).getBackgroundImage(), 0, 0, 1920, 1080, null);
@@ -110,6 +125,7 @@ public class ChartSelect implements Screen {
         backgroundMusic = chartSelectors.get(chartIndex).getAudio();
 
         // In ms
+        // Play song starting at song preview time
         double spt = chartSelectors.get(chartIndex).getSongPreviewTime();
         backgroundMusic.setMicrosecondPosition((long) (spt * 1000));
         backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
@@ -153,12 +169,14 @@ public class ChartSelect implements Screen {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        // Play if space is pressed
+        // Play if space is pressed enter the game
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             Game4Key.setChart(chartSelectors.get(chartIndex).getChart());
             Main.game.switchScreen(Game.Screens.GAME_4KEY);
             return;
         }
+
+        // Scroll through the charts with arrows
         chartSelectors.get(chartIndex).setSelected(false);
         if (e.getKeyCode() == KeyEvent.VK_UP) {
             if (chartIndex > 0) {
@@ -181,7 +199,7 @@ public class ChartSelect implements Screen {
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        // Scroll through maps
+        // Scroll through maps using scroll wheel
         chartSelectors.get(chartIndex).setSelected(false);
         if (e.getWheelRotation() < 0) {
             if (chartIndex > 0) {

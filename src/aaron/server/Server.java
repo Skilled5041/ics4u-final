@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron.server;
 
 import java.io.IOException;
@@ -10,15 +13,23 @@ public class Server {
     LinkedList<ClientHandler> clientHandlers = new LinkedList<>();
     Consumer<String> handler = null;
 
+    /**
+     * Set the handler for when a message is received
+     * @param handler The handler
+     */
     public void setHandler(Consumer<String> handler) {
         this.handler = handler;
     }
 
+    /**
+     * Start the server on the specified port
+     * @param port The port to start the server on
+     */
     public void host(int port) {
         try {
             serverSocket = new ServerSocket(port);
         } catch (IOException e) {
-            System.out.println("Error starting aaron.server: " + e.getMessage());
+            System.out.println("Error starting server: " + e.getMessage());
         }
 
         String ip = serverSocket.getInetAddress().getHostAddress();
@@ -31,6 +42,9 @@ public class Server {
         }).start();
     }
 
+    /**
+     * Close the server
+     */
     public synchronized void close() {
         if (serverSocket == null) {
             System.out.println("Server is not running");
@@ -39,12 +53,15 @@ public class Server {
         try {
             serverSocket.close();
         } catch (IOException e) {
-            System.out.println("Error closing aaron.server: " + e.getMessage());
+            System.out.println("Error closing server: " + e.getMessage());
         }
 
         System.out.println("Server closed");
     }
 
+    /**
+     * Accepts a new client connection
+     */
     public synchronized void accept() {
         if (serverSocket == null) {
             System.out.println("Server is not running");
@@ -60,12 +77,20 @@ public class Server {
         }
     }
 
+    /**
+     * Sends a message to all connected clients
+     * @param message
+     */
     public void broadcast(String message) {
         for (ClientHandler clientHandler : clientHandlers) {
             clientHandler.send(message);
         }
     }
 
+    /**
+     * Handles a message received from a client
+     * @param message
+     */
     public void handle(String message) {
         if (handler != null) {
             handler.accept(message);

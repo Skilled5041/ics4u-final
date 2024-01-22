@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron;
 
 import aaron.graphics.Background;
@@ -12,11 +15,13 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class Main {
+    // Create JFrames and JPanels
     public static JFrame frame = new JFrame("Game");
     public static Background background = new Background();
     public static Game game = new Game();
 
     public static void main(String[] args) {
+        // Initialize all screens
         Result.init();
         MainMenu.init();
         ChartSelect.init();
@@ -25,6 +30,7 @@ public class Main {
         background.setBounds(0, 0, Game.WIDTH, Game.HEIGHT);
         game.setBounds(0, 0, Game.WIDTH, Game.HEIGHT);
 
+        // Set up the window
         game.start();
         game.setLayout(null);
         frame.setLayout(null);
@@ -33,6 +39,7 @@ public class Main {
         frame.setSize(Game.WIDTH, Game.HEIGHT);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setUndecorated(true);
+        // Exit the program when the window is closed
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {

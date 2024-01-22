@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron;
 
 import aaron.graphics.Screen;
@@ -22,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Game extends JPanel implements KeyListener, MouseWheelListener {
+    // Fonts
     public static Font fontSmall = new Font("Aller", Font.PLAIN, 24);
     public static Font fontSmaller = fontSmall.deriveFont(20f);
     public static Font fontMedium = fontSmall.deriveFont(64f);
@@ -45,11 +49,13 @@ public class Game extends JPanel implements KeyListener, MouseWheelListener {
     public static int HEIGHT = 1080;
     Toolkit toolkit = Toolkit.getDefaultToolkit();
 
+    // Sends input to the current screen
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         screens.get(currentScreen).mouseWheelMoved(e);
     }
 
+    // List of screens
     public enum Screens {
         GAME_4KEY,
         CHART_SELECT,
@@ -61,6 +67,7 @@ public class Game extends JPanel implements KeyListener, MouseWheelListener {
 
     Screens currentScreen = Screens.MAIN_MENU;
 
+    // Maps a screen enum to its class
     Map<Screens, Screen> screens = new HashMap<>() {{
         put(Screens.GAME_4KEY, new Game4Key());
         put(Screens.CHART_SELECT, new ChartSelect());
@@ -106,6 +113,7 @@ public class Game extends JPanel implements KeyListener, MouseWheelListener {
         g2d.drawImage(buffer, null, 0, 0);
     }
 
+    // Send input to the current screen
     @Override
     public void keyTyped(KeyEvent e) {
         screens.get(currentScreen).keyTyped(e);
@@ -121,6 +129,9 @@ public class Game extends JPanel implements KeyListener, MouseWheelListener {
         screens.get(currentScreen).keyReleased(e);
     }
 
+    /**
+     * Called when the game is exited
+     */
     public void onExit() {
         screens.get(currentScreen).end();
     }

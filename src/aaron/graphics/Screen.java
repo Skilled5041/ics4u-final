@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron.graphics;
 
 import java.awt.Graphics2D;

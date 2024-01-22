@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron;
 
 import java.awt.Color;
@@ -9,8 +12,10 @@ import java.util.Scanner;
 
 // File in the format of KEY=VALUE
 public class SettingsManager {
+    // Settings file
     private static final String SETTINGS_FILE = ".conf";
 
+    // Settings
     private static int scrollSpeed;
     private static boolean hitGlow;
     private static boolean laneSeparators;
@@ -84,7 +89,11 @@ public class SettingsManager {
         SettingsManager.lane4Color = lane4Color;
     }
 
+    /**
+     * Saves the settings
+     */
     public static void save() {
+        // Open the file
         FileWriter writer = null;
         try {
             writer = new FileWriter(SETTINGS_FILE);
@@ -93,6 +102,7 @@ public class SettingsManager {
             System.exit(1);
         }
 
+        // Write the settings
         try {
             writer.write("SCROLL_SPEED=" + scrollSpeed + "\n");
             writer.write("HIT_GLOW=" + hitGlow + "\n");
@@ -110,6 +120,7 @@ public class SettingsManager {
         }
     }
 
+    // Read the settings file
     static {
         Scanner scanner = null;
         try {

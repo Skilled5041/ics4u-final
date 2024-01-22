@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron.screens;
 
 import aaron.Game;
@@ -13,6 +16,9 @@ import java.awt.event.MouseWheelEvent;
 public class About implements Screen {
     private static final CustomButton backButton = new CustomButton(800, 200, "Back");
 
+    /**
+     * Used to avoid null error
+     */
     public static void init() {
         backButton.setLocation(1920 / 2 - 400, 1080 / 2 + 300);
         backButton.onClick(e -> Main.game.switchScreen(Game.Screens.MAIN_MENU));

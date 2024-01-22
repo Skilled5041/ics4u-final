@@ -1,4 +1,5 @@
-// Aaron Ye 2024-
+// Aaron Ye
+// 2024-01-21
 
 package aaron.charts;
 
@@ -16,29 +17,33 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Chart {
-    // Only 4 key aaron.charts are supported for now
+    // Only 4 key charts are supported
     public enum Mode {
         KEYS_4,
     }
 
+    // The background music
     private Clip audio = null;
 
     public Clip getAudio() {
         return audio;
     }
 
+    // The time in ms the song starts at when previewing
     private double songPreviewTime = 0;
 
     public double getSongPreviewTime() {
         return songPreviewTime;
     }
 
+    // The background image
     private BufferedImage background = null;
 
     public BufferedImage getBackground() {
         return background;
     }
 
+    // Stuff from the chart file
     private String mapId = null;
 
     public String getMapId() {
@@ -51,24 +56,28 @@ public class Chart {
         return mapSetId;
     }
 
+    // Only 4 key is supported
     private Mode mode = null;
 
     public Mode getMode() {
         return mode;
     }
 
+    // The name of the song
     private String songTitle = null;
 
     public String getSongTitle() {
         return songTitle;
     }
 
+    // The name of the artist
     public String songArtist = null;
 
     public String getSongArtist() {
         return songArtist;
     }
 
+    // Stuff from the chart file
     private String source = null;
 
     public String getSource() {
@@ -81,24 +90,28 @@ public class Chart {
         return tags;
     }
 
+    // Person who made the chart
     private String creator = null;
 
     public String getCreator() {
         return creator;
     }
 
+    // The name of the difficulty
     private String difficultyName = null;
 
     public String getDifficultyName() {
         return difficultyName;
     }
 
+    // The description of the chart
     private String description = null;
 
     public String getDescription() {
         return description;
     }
 
+    // Stuff from the chart file
     private ArrayList<TimingPoint> timingPoints = null;
 
     public ArrayList<TimingPoint> getTimingPoints() {
@@ -111,18 +124,39 @@ public class Chart {
         return sliderVelocities;
     }
 
+    // The notes
     private ArrayList<Note>[] notes = null;
 
     public ArrayList<Note>[] getNotes() {
         return notes;
     }
 
+    // If the chart has an error while parsing
     private boolean hasError = false;
 
     public boolean getError() {
         return this.hasError;
     }
 
+    /**
+     * Creates a chart object
+     * @param audioFilePath The path to the audio file
+     * @param songPreviewTime The time in ms the song starts at when previewing
+     * @param backgroundFilePath The path to the background image
+     * @param mapId The id of the map
+     * @param mapSetId The id of the map set
+     * @param mode The mode of the chart
+     * @param songTitle The name of the song
+     * @param songArtist The name of the artist
+     * @param source The source of the song
+     * @param tags The tags of the song
+     * @param creator The creator of the chart
+     * @param difficultyName The name of the difficulty
+     * @param description The description of the chart
+     * @param timingPoints The timing points of the chart
+     * @param sliderVelocities The slider velocities of the chart
+     * @param notes The notes of the chart
+     */
     public Chart(
             String audioFilePath,
             double songPreviewTime,
@@ -163,6 +197,7 @@ public class Chart {
             return;
         }
 
+        // Open the audio file
         try {
             if (audioFilePath.endsWith(".mp3")) {
                 audioFilePath = audioFilePath.substring(0, audioFilePath.length() - 4) + ".wav";
@@ -176,6 +211,7 @@ public class Chart {
 
         this.songPreviewTime = songPreviewTime;
 
+        // Open the background image
         try {
             this.background = ImageIO.read(new File(backgroundFilePath));
         } catch (IOException | IllegalArgumentException e) {
@@ -198,11 +234,19 @@ public class Chart {
         this.notes = notes;
     }
 
+    /**
+     * Parses a chart file
+     * @param directoryPath The path to the directory
+     * @param fileName The name of the file
+     * @return The chart object
+     */
     public static Chart parse(String directoryPath, String fileName) {
+        // Fix the path
         if (!directoryPath.endsWith("/")) {
             directoryPath += "/";
         }
 
+        // Read the file
         BufferedReader br;
         try {
             br = new BufferedReader(new FileReader(directoryPath + fileName));
@@ -210,6 +254,7 @@ public class Chart {
             return null;
         }
         try {
+            // Parse
             String audioFilePath = directoryPath + parseStringLine(br.readLine());
 
             double songPreviewTime = 0;
@@ -236,7 +281,6 @@ public class Chart {
             String difficultyName = parseStringLine(br.readLine());
             String description = parseStringLine(br.readLine());
 
-            // TODO: make it work if the array spans multiple lines
             // Skips editor layer line
             br.readLine();
             // Skip custom audio samples line
@@ -244,6 +288,7 @@ public class Chart {
             // Skip sound effect line
             br.readLine();
 
+            // Read timing points
             ArrayList<TimingPoint> timingPoints = new ArrayList<>();
             br.readLine();
             while (true) {
@@ -256,6 +301,7 @@ public class Chart {
                 timingPoints.add(new TimingPoint(startTimeInt, bpm));
             }
 
+            // Read slider velocities
             ArrayList<SliderVelocity> sliderVelocities = new ArrayList<>();
             while (true) {
                 String startTime = br.readLine();
@@ -267,6 +313,7 @@ public class Chart {
                 sliderVelocities.add(new SliderVelocity(startTimeDouble, multiplier));
             }
 
+            // Read the notes
             ArrayList<Note>[] notes = (ArrayList<Note>[]) new ArrayList[4];
             for (int i = 0; i < 4; i++) {
                 notes[i] = new ArrayList<>();
@@ -310,14 +357,29 @@ public class Chart {
         }
     }
 
+    /**
+     * Parses a string from a line of the chart file
+     * @param s The line
+     * @return The string
+     */
     private static String parseStringLine(String s) {
         return s.substring(s.indexOf(":") + 1).trim();
     }
 
+    /**
+     * Parses an integer from a line of the chart file
+     * @param s The line
+     * @return The integer
+     */
     private static int parseIntLine(String s) {
         return Integer.parseInt(s.substring(s.indexOf(":") + 1).trim());
     }
 
+    /**
+     * Parses a double from a line of the chart file
+     * @param s The line
+     * @return The double
+     */
     private static double parseDoubleLine(String s) {
         return Double.parseDouble(s.substring(s.indexOf(":") + 1).trim());
     }

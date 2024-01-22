@@ -1,12 +1,14 @@
 package aaron.graphics;
 
 public class EasingFunctions {
-    // https://easings.net/#easeOutExpo
-    public static double easeOutExpo(double n) {
-        return n == 1 ? 1 : 1 - Math.pow(2, -10 * n);
-    }
 
     // https://easings.net/#easeInOutExpo
+
+    /**
+     * Easing function for better animation
+     * @param n the progress
+     * @return the eased progress
+     */
     public static double easeInOutExpo(double n) {
         if (n == 0) {
             return 0;

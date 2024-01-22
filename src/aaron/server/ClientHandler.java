@@ -1,3 +1,7 @@
+// Aaron Ye
+// 2024-01-21
+// Was for multiplayer
+
 package aaron.server;
 
 import java.io.BufferedReader;
@@ -12,6 +16,11 @@ public class ClientHandler extends Thread {
     private PrintWriter output;
     private final Server server;
 
+    /**
+     * Creates a new client handler
+     * @param socket Socket to connect to
+     * @param server Server to handle messages
+     */
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
@@ -23,6 +32,9 @@ public class ClientHandler extends Thread {
         }
     }
 
+    /**
+     * Runs the client handler
+     */
     @Override
     public void run() {
         new Thread(() -> {
@@ -47,10 +59,17 @@ public class ClientHandler extends Thread {
         }).start();
     }
 
+    /**
+     * Sends a message to the client
+     * @param message
+     */
     public void send(String message) {
         output.println(message);
     }
 
+    /**
+     * Closes the connection
+     */
     public void close() {
         try {
             socket.close();

@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2024-01-21
+
 package aaron.screens;
 
 import aaron.Game;
@@ -17,6 +20,7 @@ public class Result implements Screen {
     private static Chart chart;
     private static final CustomButton playAgainButton = new CustomButton(500, 200, "Play Again");
     private static final CustomButton backButton = new CustomButton(500, 200, "Back");
+    // Initialize buttons
     static {
         playAgainButton.setLocation(1920 / 2 - 500, 1080 / 2 + 250);
         backButton.setLocation(1920 / 2 + 50, 1080 / 2 + 250);
@@ -28,6 +32,9 @@ public class Result implements Screen {
         });
     }
 
+    /**
+     * Avoids null error
+     */
     public static void init() {
         Main.game.add(playAgainButton);
         Main.game.add(backButton);
@@ -46,28 +53,28 @@ public class Result implements Screen {
     private static int perfectCount = 0;
     private static int marvelousCount = 0;
 
-    public static void setMissCount(int missCount) {
-        missCount = missCount;
+    public static void setMissCount(int mc) {
+        missCount = mc;
     }
 
-    public static void setOkayCount(int okayCount) {
-        okayCount = okayCount;
+    public static void setOkayCount(int oc) {
+        okayCount = oc;
     }
 
-    public static void setGoodCount(int goodCount) {
-        goodCount = goodCount;
+    public static void setGoodCount(int gc) {
+        goodCount = gc;
     }
 
-    public static void setGreatCount(int greatCount) {
-        greatCount = greatCount;
+    public static void setGreatCount(int gc) {
+        greatCount = gc;
     }
 
-    public static void setPerfectCount(int perfectCount) {
-        perfectCount = perfectCount;
+    public static void setPerfectCount(int pc) {
+        perfectCount = pc;
     }
 
-    public static void setMarvelousCount(int marvelousCount) {
-        marvelousCount = marvelousCount;
+    public static void setMarvelousCount(int mc) {
+        marvelousCount = mc;
     }
 
     private static int maxCombo = 0;

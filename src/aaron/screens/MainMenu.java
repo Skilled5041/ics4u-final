@@ -1,3 +1,6 @@
+// Aaron Ye
+// 2023-01-21
+
 package aaron.screens;
 
 import aaron.Game;
@@ -21,6 +24,7 @@ import java.io.IOException;
 public class MainMenu implements Screen {
     public static Clip menuLoop;
 
+    // Open file
     static {
         try {
             menuLoop = AudioSystem.getClip();
@@ -30,12 +34,14 @@ public class MainMenu implements Screen {
         }
     }
 
+    // Buttons
     private static final CustomButton playButton = new CustomButton(800, 200, "Play");
     private static final CustomButton settingsButton = new CustomButton(800, 200, "Settings");
     private static final CustomButton aboutButton = new CustomButton(800, 200, "About");
     private static final CustomButton exitButton = new CustomButton(800, 200, "Exit");
     public static BufferedImage logo;
 
+    // Open images and initialise buttons
     static {
         try {
             logo = ImageIO.read(new File("resources/logo.png"));
@@ -55,6 +61,9 @@ public class MainMenu implements Screen {
         });
     }
 
+    /**
+     * Used to avoid null error
+     */
     public static void init() {
         Main.game.add(playButton);
         Main.game.add(settingsButton);
